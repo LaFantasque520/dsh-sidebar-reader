@@ -21,6 +21,12 @@ model ──POST /sidebar-reader/command──▶ host route (lib/index.js)
 model ◀──GET /sidebar-reader/latest─── host
 ```
 
+## Agent tool (auto-registered)
+
+The plugin's host side registers a native agent tool **`sidebar_read`** with the DSH tool registry: it appears in every new session's tool list automatically, and one **zero-argument call** returns the full snapshot (web page text + sidebar tabs + terminal screens) — no HTTP, no configuration. The "prefer this over pwsh/web_fetch for terminal or page questions" preference is encoded in the tool description itself.
+
+The HTTP endpoints below remain as a fallback channel.
+
 ## Features
 
 | Channel | Source | Notes |
