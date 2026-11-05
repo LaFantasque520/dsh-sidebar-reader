@@ -1,0 +1,52 @@
+{
+  "name": "dsh-sidebar-reader",
+  "description": "Let the model read the current session's sidebar on demand: official right-sidebar tabs, terminal screens and browser page text.",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "lib/index.js",
+  "license": "MIT",
+  "author": "LaFantasque520",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LaFantasque520/dsh-sidebar-reader.git"
+  },
+  "homepage": "https://github.com/LaFantasque520/dsh-sidebar-reader#readme",
+  "bugs": "https://github.com/LaFantasque520/dsh-sidebar-reader/issues",
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "sidebar",
+    "terminal",
+    "reader"
+  ],
+  "files": [
+    "lib",
+    "cordis.patch.yml",
+    "README.md",
+    "README.zh.md",
+    "LICENSE"
+  ],
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "inject": ["@deepseek-ai/dsh-client-ui-layout", "@deepseek-ai/dsh-api-gateway"],
+      "platform": "web"
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "^4.0.1",
+    "@deepseek-ai/dsh": ">=0.2.1-rc.2 <0.3.0-0"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/dsh": {
+      "optional": true
+    }
+  }
+}
