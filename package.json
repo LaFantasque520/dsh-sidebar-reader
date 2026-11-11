@@ -1,23 +1,17 @@
 {
-  "name": "dsh-sidebar-reader",
-  "description": "Let the model read the current session's sidebar on demand: the active tab, official right-sidebar tabs, terminal screens and browser page text.",
-  "version": "1.0.1",
+  "name": "dsh-terminal-operator",
+  "description": "Let the model drive the sidebar terminal: list, open, write text into a terminal and close it, returning the resulting screen.",
+  "version": "0.2.0",
   "type": "module",
   "main": "lib/index.js",
   "license": "MIT",
-  "author": "LaFantasque520",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/LaFantasque520/dsh-sidebar-reader.git"
-  },
-  "homepage": "https://github.com/LaFantasque520/dsh-sidebar-reader#readme",
-  "bugs": "https://github.com/LaFantasque520/dsh-sidebar-reader/issues",
+  "author": "local",
   "keywords": [
     "dsh",
     "deepseek-harness",
-    "sidebar",
     "terminal",
-    "reader"
+    "sidebar",
+    "operator"
   ],
   "files": [
     "lib",
