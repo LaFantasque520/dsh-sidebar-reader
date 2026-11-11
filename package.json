@@ -1,16 +1,21 @@
 {
-  "name": "dsh-terminal-operator",
-  "description": "Let the model drive the sidebar terminal: list, open, write text into a terminal and close it, returning the resulting screen.",
-  "version": "0.2.0",
+  "name": "dsh-sidebar-operator",
+  "description": "Read the current session's sidebar and drive its terminals: tabs, terminal screens, browser text, plus list/open/write/close with sandbox-aligned approval.",
+  "version": "2.0.0",
   "type": "module",
   "main": "lib/index.js",
   "license": "MIT",
-  "author": "local",
+  "author": "LaFantasque520",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LaFantasque520/dsh-sidebar-reader.git"
+  },
+  "homepage": "https://github.com/LaFantasque520/dsh-sidebar-reader#readme",
   "keywords": [
     "dsh",
     "deepseek-harness",
-    "terminal",
     "sidebar",
+    "terminal",
     "operator"
   ],
   "files": [

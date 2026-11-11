@@ -1,49 +1,53 @@
-# dsh-terminal-operator
+# dsh-sidebar-operator
 
-让模型**操作**侧边栏终端，而不只是读它。
+读取侧边栏，并且**操作**它的终端。
 
-## 能力
+本插件是 `dsh-sidebar-reader` 的整合版：读取能力保留，新增终端写入/新建/关闭。
+
+## 五个工具
 
 | 工具 | 作用 |
 |---|---|
-| `terminal_list` | 列出当前会话保留的终端（id / 标题 / 状态 / cwd / shell） |
+| `sidebar_read` | 读当前会话侧栏：标签页、每个终端的屏幕、侧栏浏览器网页正文 |
+| `terminal_list` | 列出会话保留的终端（id / 标题 / 状态 / cwd / shell） |
 | `terminal_write` | 向指定终端键入文本，等落屏后返回屏幕尾部 |
-| `terminal_open` | 新建一个 agent 专用终端，返回 terminalId |
-| `terminal_close` | 关闭终端，杀进程并释放名额 |
+| `terminal_open` | 新建终端，默认开成可见标签页 |
+| `terminal_close` | 关闭终端，结束其进程树 |
 
-## 实现要点
+## 写入的闸门
 
-- **宿主 = 信箱**：`lib/index.js` 在 loopback `webServer` 注册 `/terminal-operator/{command,result,health}`，不经过浏览器鉴权；四个 agent 工具通过 `pendingCommand` / `results` 与客户端配对。
-- **客户端 = 真正的键盘**：`lib/client.js` 每 1.5s 轮询领命令，用 `ctx.remote.terminal.attach()` 拿到双工流，`handle.send({type:"write",sequence,data})` 写入，等 `ack` 并消费输出帧，最后 `abort()` 释放输入权。
-- **为什么必须过桥**：`remote.terminal` 是 cordis 注入的渲染进程服务，宿主进程拿不到。
+没有命令白名单。用**会话的沙箱策略**判断：
 
-## 协议要点（照官方 terminal-controller）
+```
+sandboxPolicy.resolve({session})
+  mode === danger-full-access            → 直接执行
+  命令头命中破坏性集合（format/reg/…）    → 审批
+  命令里的路径全部在 workspaceRoot 内     → 直接执行
+  出现越界路径                            → 审批
+```
 
-- `sequence` 从 1 连续递增；`ack` 必须按序到达，否则 `invalidOutput`。
-- 必须持续消费帧：过慢订阅者会被判失败。
+审批走宿主原生 `ctx.approval.request()`（底部审批 UI），不是自绘弹窗；只有拿不到审批服务时才退回自绘框。
+
+- 会话策略 `never`（Full access 预设）时跳过审批——否则 `request()` 会确定性返回 `rejected`，插件直接不可用。
+- 每次请求 / 审批 / 执行都会写 `~/.dsh/sidebar-operator-audit.log`（NDJSON）。
+
+## 协议要点
+
+- 写入走官方 `remote.terminal.attach` 双工流：`handle.send({type:"write",sequence,data})`，`sequence` 从 1 连续递增，必须持续消费输出帧并等 `ack`。
 - 最新 attach 持有输入权；`abort` 只释放输入权，**不结束进程**。
-- 单条写入上限 `maxInputBytes`（默认 64KB），本插件内部再 cap 到 4000 字符。
+- 单条写入上限 4000 字符（底层 `maxInputBytes` 默认 64KB）。
+- `terminal_open` 用 `sidebarRight.openTab('terminal')` 开真标签——Host 上「布局之外」的终端没有任何 UI 恢复入口。
 
 ## 已知行为
 
-- `terminal_write` **执行前必须用户确认**：客户端弹窗显示模型要键入的原文，默认焦点在「拒绝」，Esc 取消，120 秒未处理自动拒绝；拒绝时工具返回 `{rejected:true}`。
-- 每次请求 / 结果 / 拒绝都会追加到 `~/.dsh/terminal-operator-audit.log`（NDJSON，一行一条）。
-- `terminal_open` 默认通过 `sidebarRight.openTab('terminal')` **开一个可见标签页**；传 `showInSidebar:false` 才退回无头终端——注意 Host 上「保存布局之外」的终端没有 UI 恢复入口，用户看不到。
-- `terminal_write` 期间会**短暂接管**该终端的键盘输入；断开后 GUI 可能需要你点一下「接管输入」才能继续打字。
-- 页面隐藏（最小化）时客户端不轮询命令，工具会超时报错。
-- 只适合行式命令；`vim` / `top` 这类全屏 TUI 不适用。
-- 用户终端以系统用户权限运行，**独立于 agent 沙箱与审批策略**——这是一条实质的权限边界变化，调用前请确认用户意图。
+- 写入期间短暂接管该终端键盘；断开后 GUI 可能需要你点「接管输入」。
+- 页面隐藏时客户端不轮询，工具会超时。
+- 路径判定是启发式（不解析 shell 变量展开），终端本身不在沙箱内。
+- `terminal_close` 永远需要审批。
 
-## 本地安装
+## 安装
 
-```powershell
-# 1. 复制到 profile 的 vendor 与 node_modules
-Copy-Item -Recurse <本目录> "$env:USERPROFILE\.dsh\profiles\desktop\vendor\dsh-terminal-operator" -Force
-Copy-Item -Recurse <本目录> "$env:USERPROFILE\.dsh\profiles\desktop\node_modules\dsh-terminal-operator" -Force
-
-# 2. profile/package.json 里加依赖与 bundle 条目
-#    "dsh-terminal-operator": "file:vendor/dsh-terminal-operator"
-#    dsh.profile.bundles 追加 "dsh-terminal-operator"
-
-# 3. 重启 DSH 应用（宿主 bundle 在启动时加载）
-```
+把本目录放到 `~/.dsh/profiles/desktop/vendor/dsh-sidebar-operator` 与
+`node_modules/dsh-sidebar-operator`，在 profile 的 `dependencies` 写
+`"dsh-sidebar-operator": "file:vendor/dsh-sidebar-operator"`，并把包名加进
+`dsh.profile.bundles`，然后重启 DSH。

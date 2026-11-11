@@ -1,4 +1,4 @@
-# terminal-operator bundle patch: insert the client entry into the web plugin roster.
+# sidebar-operator bundle patch: insert the client entry into the web plugin roster.
 - insert:
-    - id: ui-terminal-operator
-      name: 'dsh-terminal-operator'
+    - id: ui-sidebar-operator
+      name: 'dsh-sidebar-operator'
