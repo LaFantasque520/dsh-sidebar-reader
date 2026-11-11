@@ -38,6 +38,13 @@ sandboxPolicy.resolve({session})
 - 单条写入上限 4000 字符（底层 `maxInputBytes` 默认 64KB）。
 - `terminal_open` 用 `sidebarRight.openTab('terminal')` 开真标签——Host 上「布局之外」的终端没有任何 UI 恢复入口。
 
+## 回传体积控制
+
+- **去控制序列**：返回前剥掉 ANSI/OSC 转义与不可见控制符，模型只看可读文本。
+- **只回增量**：每个终端记住上次回传的屏幕，本次只返回新增部分（`delta: true`）；界面重绘无法对齐时退化为按行公共前缀。
+- **双重截断**：默认最多 100 行 / 4000 字符，超出置 `truncated: true`。
+- `sidebar_read` 的网页正文只在当前选中标签就是浏览器且侧栏展开时读取（严格模式）。
+
 ## 已知行为
 
 - 写入期间短暂接管该终端键盘；断开后 GUI 可能需要你点「接管输入」。
